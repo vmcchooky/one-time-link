@@ -1,0 +1,24 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*.code-workspace
+
+# Node / frontend
+frontend/web-app/node_modules/
+frontend/web-app/dist/
+
+# Go
+*.exe
+*.dll
+*.so
+*.dylib
+coverage.out
+
+# Env / runtime
+.env
+.env.local
+deploy/prod/.env
+
+# Logs
+*.log
