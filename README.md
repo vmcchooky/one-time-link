@@ -1,18 +1,18 @@
 # one-time-link
 
-`one-time-link` is a one-time secret sharing application designed for portfolio use first, with a path toward production hardening later.
+`one-time-link` là ứng dụng chia sẻ secret một lần, được thiết kế ưu tiên cho mục đích portfolio với khả năng nâng cấp lên production sau này.
 
-## Current focus
+## Trọng Tâm Hiện Tại
 
-The repository is currently set up for Milestone 1:
+Repository hiện đang ở Milestone 1:
 
-- product and deployment documentation is in place
-- the frontend has a React + TypeScript shell
-- the backend has a Go API shell
-- local Redis is wired through Docker Compose
-- deployment docs target `quorix.io.vn` with a low-cost VPS primary and Oracle Cloud standby
+- Tài liệu sản phẩm và deployment đã hoàn thiện
+- Frontend có shell React + TypeScript
+- Backend có shell Go API
+- Redis local được cấu hình qua Docker Compose
+- Tài liệu deployment hướng tới `quorix.io.vn` với VPS primary chi phí thấp và Oracle Cloud standby
 
-## Repository structure
+## Cấu Trúc Repository
 
 ```text
 backend/
@@ -27,23 +27,23 @@ docs/
 scripts/
 ```
 
-## Local development
+## Phát Triển Local
 
-### 1. Start Redis
+### 1. Khởi Động Redis
 
 ```bash
 docker compose -f deploy/local/docker-compose.yml up -d
 ```
 
-### 2. Run the Go API
+### 2. Chạy Go API
 
 ```bash
 go run ./backend/cmd/api
 ```
 
-The API listens on `http://localhost:8080` by default.
+API sẽ lắng nghe tại `http://localhost:8080` theo mặc định.
 
-### 3. Run the frontend
+### 3. Chạy Frontend
 
 ```bash
 cd frontend/web-app
@@ -51,25 +51,30 @@ npm install
 npm run dev
 ```
 
-The frontend runs on `http://localhost:5173` by default.
+Frontend sẽ chạy tại `http://localhost:5173` theo mặc định.
 
-## Key docs
+## Tài Liệu Chính
 
-- [docs/README.md](/D:/Go/duan/one-time-link/docs/README.md)
-- [docs/product-spec/one-time-link-requirements.md](/D:/Go/duan/one-time-link/docs/product-spec/one-time-link-requirements.md)
-- [docs/product-spec/one-time-link-architecture.md](/D:/Go/duan/one-time-link/docs/product-spec/one-time-link-architecture.md)
-- [docs/product-spec/one-time-link-milestones.md](/D:/Go/duan/one-time-link/docs/product-spec/one-time-link-milestones.md)
-- [docs/deployment/deployment-decision-summary.md](/D:/Go/duan/one-time-link/docs/deployment/deployment-decision-summary.md)
+- [docs/README.md](docs/README.md) - Tổng quan tài liệu
+- [docs/product-spec/one-time-link-requirements.md](docs/product-spec/one-time-link-requirements.md) - Yêu cầu sản phẩm
+- [docs/product-spec/one-time-link-architecture.md](docs/product-spec/one-time-link-architecture.md) - Kiến trúc hệ thống
+- [docs/product-spec/one-time-link-milestones.md](docs/product-spec/one-time-link-milestones.md) - Lộ trình phát triển
+- [docs/deployment/deployment-guide.md](docs/deployment/deployment-guide.md) - Hướng dẫn deployment
+- [DEVELOPMENT.md](DEVELOPMENT.md) - Hướng dẫn phát triển chi tiết
 
-## Milestone 1 done in code
+## Milestone 1 Đã Hoàn Thành
 
-- monorepo layout
-- frontend shell
-- backend shell
-- local Redis compose file
-- shared HTTP contract document
-- health endpoint and structured request logging
+- Cấu trúc monorepo
+- Shell frontend
+- Shell backend
+- File Docker Compose cho Redis local
+- Tài liệu HTTP contract
+- Health endpoint và structured request logging
+- Request ID middleware
+- CORS middleware
+- Request size limiting
+- IP và User-Agent hashing trong logs
 
-## Next step
+## Bước Tiếp Theo
 
-Milestone 2 is to implement the create-secret flow with client-side encryption and a real `POST /api/secrets` backend path.
+Milestone 2 sẽ triển khai luồng tạo secret với client-side encryption và endpoint `POST /api/secrets` thực sự.
