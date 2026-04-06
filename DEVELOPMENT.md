@@ -94,11 +94,16 @@ go test -cover ./backend/...
 go test -v ./backend/...
 ```
 
-### Frontend Tests
+### Frontend Verification
+
+Frontend test runner has not been added yet in Milestone 1.
+
+Use build verification instead:
 
 ```bash
 cd frontend/web-app
-npm test
+npm install
+npm run build
 ```
 
 ## Kiểm Tra Nhanh

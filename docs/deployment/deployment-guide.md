@@ -154,12 +154,10 @@ go build -o /opt/one-time-link/api ./cmd/api
 
 # Create environment file
 sudo tee /opt/one-time-link/.env << EOF
-PORT=8080
-REDIS_ADDR=127.0.0.1:6379
-REDIS_PASSWORD=your-redis-password
+APP_SERVICE_NAME=one-time-link-api
+APP_HOST=0.0.0.0
+APP_PORT=8080
 ALLOWED_ORIGIN=https://secret.quorix.io.vn
-LOG_LEVEL=info
-MAX_SECRET_SIZE=10240
 EOF
 
 # Create systemd service

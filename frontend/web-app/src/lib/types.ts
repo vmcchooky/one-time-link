@@ -1,45 +1,44 @@
 export type HealthResponse = {
   service: string;
   status: string;
-  time: string;
-  store: string;
-  mode: string;
+  timestamp: string;
+  version: string;
 };
 
 export type CreateSecretRequest = {
   ciphertext: string;
   nonce: string;
   algorithm: string;
-  ttlSeconds: number;
+  ttl_seconds: number;
 };
 
 export type CreateSecretResponse = {
-  secretId: string;
-  expiresAt: string;
+  secret_id: string;
+  expires_at: string;
 };
 
 export type SecretState = "pending" | "already_used" | "expired" | "not_found";
 
 export type SecretStatusResponse = {
-  secretId: string;
-  state: SecretState;
+  secret_id: string;
+  status: SecretState;
 };
 
 export type CreateRevealSessionRequest = {
-  secretId: string;
+  secret_id: string;
 };
 
 export type CreateRevealSessionResponse = {
-  sessionId: string;
-  expiresAt: string;
+  session_id: string;
+  expires_at: string;
 };
 
 export type ConsumeSecretRequest = {
-  sessionId: string;
+  session_id: string;
 };
 
 export type ConsumeSecretResponse = {
-  secretId: string;
+  secret_id: string;
   ciphertext: string;
   nonce: string;
   algorithm: string;

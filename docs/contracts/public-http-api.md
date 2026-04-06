@@ -37,17 +37,17 @@ GET /healthz
 
 **Note**: Milestone 1 implementation returns a simple health check. Redis connectivity status will be added in future milestones when Redis integration is complete.
 
-### Error Response (503)
+### Future Error Response (503)
 ```json
 {
-  "service": "one-time-link-api", 
+  "service": "one-time-link-api",
   "status": "unhealthy",
   "timestamp": "2026-04-05T12:00:00Z",
   "version": "1.0.0"
 }
 ```
 
-**Note**: Milestone 1 implementation does not include Redis health checks. This will be added when Redis integration is implemented in Milestone 2.
+**Note**: This response shape is reserved for future dependency-aware health checks. Milestone 1 currently returns `200` when the API process is healthy.
 
 ## 2. Create Secret
 

@@ -59,7 +59,8 @@ export function App() {
             <div>
               <p className="status ok">Connected</p>
               <p>{health.service}</p>
-              <p>{health.time}</p>
+              <p>{health.timestamp}</p>
+              <p>Version: {health.version}</p>
             </div>
           ) : error ? (
             <div>
