@@ -2,7 +2,8 @@
 .DS_Store
 Thumbs.db
 .idea/
-.vscode/*.code-workspace
+.vscode/
+.kiro/
 
 # Node / frontend
 frontend/web-app/node_modules/

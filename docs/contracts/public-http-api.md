@@ -2,6 +2,8 @@
 
 This document defines the complete API contract between the frontend and backend for the one-time-link application.
 
+API field naming, crypto defaults, payload limits, and encoding rules are defined in `crypto-and-api-decisions.md`.
+
 ## Base Configuration
 
 **Local Development:**

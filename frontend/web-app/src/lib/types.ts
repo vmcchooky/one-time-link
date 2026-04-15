@@ -9,36 +9,36 @@ export type CreateSecretRequest = {
   ciphertext: string;
   nonce: string;
   algorithm: string;
-  ttl_seconds: number;
+  ttlSeconds: number;
 };
 
 export type CreateSecretResponse = {
-  secret_id: string;
-  expires_at: string;
+  secretId: string;
+  expiresAt: string;
 };
 
-export type SecretState = "pending" | "already_used" | "expired" | "not_found";
+export type SecretState = "pending" | "alreadyUsed" | "expired" | "notFound";
 
 export type SecretStatusResponse = {
-  secret_id: string;
+  secretId: string;
   status: SecretState;
 };
 
 export type CreateRevealSessionRequest = {
-  secret_id: string;
+  secretId: string;
 };
 
 export type CreateRevealSessionResponse = {
-  session_id: string;
-  expires_at: string;
+  sessionId: string;
+  expiresAt: string;
 };
 
 export type ConsumeSecretRequest = {
-  session_id: string;
+  sessionId: string;
 };
 
 export type ConsumeSecretResponse = {
-  secret_id: string;
+  secretId: string;
   ciphertext: string;
   nonce: string;
   algorithm: string;

@@ -4,13 +4,25 @@
 
 ## Trọng Tâm Hiện Tại
 
-Repository hiện đang ở Milestone 1:
+**Milestone 2 đã hoàn thành! ✅**
 
-- Tài liệu sản phẩm và deployment đã hoàn thiện
-- Frontend có shell React + TypeScript
-- Backend có shell Go API
-- Redis local được cấu hình qua Docker Compose
-- Tài liệu deployment hướng tới `quorix.io.vn` với VPS primary chi phí thấp và Oracle Cloud standby
+Repository hiện đang ở giai đoạn:
+
+- ✅ **Milestone 1:** Foundation and Local Development - COMPLETE
+- ✅ **Milestone 2:** Client-Side Encryption and Secret Creation - COMPLETE
+- ⏳ **Milestone 3:** Secret Reveal and Consumption - NEXT
+
+### Milestone 2 Highlights
+
+- ✅ Client-side encryption với AES-GCM 256-bit
+- ✅ POST /api/secrets endpoint hoạt động
+- ✅ Redis storage với TTL tự động
+- ✅ Create secret form với TTL selection
+- ✅ URL generation với encryption key trong fragment
+- ✅ Comprehensive validation và error handling
+- ✅ 20+ test cases với 70% coverage
+
+Xem chi tiết: `docs/MILESTONE_2_COMPLETION.md`
 
 ## Cấu Trúc Repository
 

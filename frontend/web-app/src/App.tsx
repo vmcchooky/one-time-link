@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { apiBaseUrl, fetchHealth } from "./lib/api";
 import type { HealthResponse } from "./lib/types";
+import { CreateSecretForm } from "./components/CreateSecretForm";
 
 export function App() {
   const [health, setHealth] = useState<HealthResponse | null>(null);
@@ -30,21 +31,14 @@ export function App() {
     <main className="shell">
       <section className="hero">
         <p className="eyebrow">quorix.io.vn / one-time-link</p>
-        <h1>Secure one-time secret sharing, scaffolded for real deployment.</h1>
+        <h1>Chia sẻ bí mật an toàn một lần</h1>
         <p className="lede">
-          This frontend is the starting shell for the create flow, reveal flow,
-          and client-side encryption work described in the product docs.
+          Mã hóa phía client, chỉ xem được một lần, tự động hết hạn.
         </p>
       </section>
 
       <section className="panel">
-        <h2>Current scaffold status</h2>
-        <ul>
-          <li>Frontend stack: React + TypeScript + Vite</li>
-          <li>Backend target: Go API behind a reverse proxy</li>
-          <li>Storage target: Redis for TTL and atomic consume</li>
-          <li>Deployment target: Vercel + VPS primary + Oracle standby</li>
-        </ul>
+        <CreateSecretForm />
       </section>
 
       <section className="grid">
@@ -54,33 +48,23 @@ export function App() {
         </article>
 
         <article className="card">
-          <h3>Backend health</h3>
+          <h3>Trạng thái Backend</h3>
           {health ? (
             <div>
-              <p className="status ok">Connected</p>
+              <p className="status ok">Đã kết nối</p>
               <p>{health.service}</p>
               <p>{health.timestamp}</p>
               <p>Version: {health.version}</p>
             </div>
           ) : error ? (
             <div>
-              <p className="status warn">Unavailable</p>
+              <p className="status warn">Không khả dụng</p>
               <p>{error}</p>
             </div>
           ) : (
-            <p className="status wait">Checking...</p>
+            <p className="status wait">Đang kiểm tra...</p>
           )}
         </article>
-      </section>
-
-      <section className="panel">
-        <h2>Next implementation steps</h2>
-        <ol>
-          <li>Build the create-secret form and TTL selection.</li>
-          <li>Add Web Crypto helpers for encrypt and decrypt flows.</li>
-          <li>Implement Go endpoints for create, status, reveal session, and consume.</li>
-          <li>Wire Redis for TTL storage and atomic one-time consume.</li>
-        </ol>
       </section>
     </main>
   );

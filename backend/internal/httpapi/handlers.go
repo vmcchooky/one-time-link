@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"one-time-link/backend/internal/secret"
 	"strings"
 	"time"
 )
@@ -42,15 +43,36 @@ func (s *Server) handleCreateSecret(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Try to read body to trigger MaxBytesReader error if size exceeded
-	_, err := io.ReadAll(r.Body)
+	// Read body to trigger MaxBytesReader if size exceeded
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		// MaxBytesReader returns an error when limit is exceeded
+		// MaxBytesReader will return error if limit exceeded
 		writeErrorJSON(w, r, http.StatusRequestEntityTooLarge, "payload_too_large", "Request body exceeds 15KB limit")
 		return
 	}
 
-	writeErrorJSON(w, r, http.StatusNotImplemented, "not_implemented", "Create secret endpoint is scaffolded but not implemented yet")
+	// Parse JSON
+	var req secret.CreateSecretRequest
+	err = json.Unmarshal(body, &req)
+	if err != nil {
+		writeErrorJSON(w, r, http.StatusBadRequest, "invalid_request", "Invalid JSON request body")
+		return
+	}
+
+	// Validate request
+	if err := secret.ValidateCreateSecretRequest(req); err != nil {
+		writeErrorJSON(w, r, http.StatusBadRequest, "invalid_request", err.Error())
+		return
+	}
+
+	// Create secret using service
+	resp, err := s.secretService.CreateSecret(r.Context(), req)
+	if err != nil {
+		writeErrorJSON(w, r, http.StatusInternalServerError, "internal_error", "Failed to create secret")
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, resp)
 }
 
 func (s *Server) handleCreateRevealSession(w http.ResponseWriter, r *http.Request) {
