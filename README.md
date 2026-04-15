@@ -84,8 +84,8 @@ Frontend sẽ chạy tại `http://localhost:5173` theo mặc định.
 
 ### Milestone Documentation
 - [docs/MILESTONE_1_COMPLETION.md](docs/MILESTONE_1_COMPLETION.md) - Milestone 1 completion report
-- [docs/MILESTONE_2_COMPLETION.md](docs/MILESTONE_2_COMPLETION.md) - Milestone 2 completion report
-- [docs/MILESTONE_2_QUICK_REFERENCE.md](docs/MILESTONE_2_QUICK_REFERENCE.md) - Milestone 2 quick reference
+- [docs/MILESTONE_2_COMPLETION.md](docs/MILESTONE_2_COMPLETION.md) - Milestone 2 completion report (includes quality assessment, metrics, and checklist)
+- [docs/MILESTONE_2_QUICK_REFERENCE.md](docs/MILESTONE_2_QUICK_REFERENCE.md) - Milestone 2 quick reference guide
 
 ## Milestone Progress
 
