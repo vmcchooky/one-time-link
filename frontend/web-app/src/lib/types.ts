@@ -17,24 +17,12 @@ export type CreateSecretResponse = {
   expiresAt: string;
 };
 
-export type SecretState = "pending" | "alreadyUsed" | "expired" | "notFound";
-
-export type SecretStatusResponse = {
+export type SecretStatus = {
   secretId: string;
-  status: SecretState;
-};
-
-export type CreateRevealSessionRequest = {
-  secretId: string;
-};
-
-export type CreateRevealSessionResponse = {
-  sessionId: string;
-  expiresAt: string;
-};
-
-export type ConsumeSecretRequest = {
-  sessionId: string;
+  status: "pending" | "not_found";
+  createdAt?: string;
+  expiresAt?: string;
+  message?: string;
 };
 
 export type ConsumeSecretResponse = {
@@ -42,4 +30,5 @@ export type ConsumeSecretResponse = {
   ciphertext: string;
   nonce: string;
   algorithm: string;
+  consumedAt: string;
 };

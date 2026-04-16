@@ -36,6 +36,118 @@ $env:API_BASE_URL="http://localhost:3000"
 6. ❌ Invalid nonce length (expect 400)
 7. ❌ Payload too large (expect 413)
 
+### test-milestone2-comprehensive.ps1
+
+Comprehensive test script cho Milestone 2 features.
+
+**PowerShell:**
+```powershell
+.\scripts\test-milestone2-comprehensive.ps1
+```
+
+### test-milestone3-reveal.sh / test-milestone3-reveal.ps1
+
+Script để test reveal flow (status check và consume).
+
+**Bash (Linux/Mac):**
+```bash
+./scripts/test-milestone3-reveal.sh
+```
+
+**PowerShell (Windows):**
+```powershell
+.\scripts\test-milestone3-reveal.ps1
+```
+
+**Test Cases:**
+1. ✅ Create secret
+2. ✅ Check status (pending)
+3. ✅ Consume secret
+4. ❌ Second consume (expect 410)
+5. ✅ Status after consume (not_found)
+
+### test-rate-limiting.ps1
+
+Script để test rate limiting functionality.
+
+**PowerShell:**
+```powershell
+.\scripts\test-rate-limiting.ps1
+```
+
+**Test Cases:**
+1. ✅ Normal requests under limit
+2. ❌ Requests exceeding limit (expect 429)
+3. ✅ Rate limit headers present
+4. ✅ Retry-After header in 429 response
+
+### test-redis-expiration.ps1
+
+Script để test Redis TTL expiration.
+
+**PowerShell:**
+```powershell
+.\scripts\test-redis-expiration.ps1
+```
+
+## Load Testing Scripts
+
+### load-test.sh / load-test.ps1
+
+Script để test performance và load handling.
+
+**Bash (Linux/Mac):**
+```bash
+# Default: 10 concurrent, 100 requests
+./scripts/load-test.sh
+
+# Custom load
+./scripts/load-test.sh --concurrent 50 --requests 500
+```
+
+**PowerShell (Windows):**
+```powershell
+# Default: 10 concurrent, 100 requests
+.\scripts\load-test.ps1
+
+# Custom load
+.\scripts\load-test.ps1 -Concurrent 50 -Requests 500
+```
+
+**Metrics:**
+- Response times (P50, P95, P99)
+- Success rate
+- Throughput (req/s)
+- Error rate
+
+## Build Scripts
+
+### build-production.sh / build-production.ps1
+
+Script để build production-ready binary với security audit.
+
+**Bash (Linux/Mac):**
+```bash
+./scripts/build-production.sh
+```
+
+**PowerShell (Windows):**
+```powershell
+.\scripts\build-production.ps1
+```
+
+**Steps:**
+1. Run all tests
+2. Security audit (govulncheck)
+3. Build for Linux (amd64)
+4. Build for Windows (amd64)
+5. Create deployment package
+
+**Output:**
+- `build/one-time-link-api-linux-amd64`
+- `build/one-time-link-api-windows-amd64.exe`
+- `build/one-time-link-api-{version}.tar.gz`
+
 ## Development Workflow
 
 Xem `DEVELOPMENT.md` ở root directory để biết chi tiết về:
@@ -46,8 +158,8 @@ Xem `DEVELOPMENT.md` ở root directory để biết chi tiết về:
 
 ## Future Scripts
 
-Các script sẽ được thêm trong tương lai:
-- Local bootstrap scripts
-- Build và release automation
-- Smoke tests
+Các script có thể được thêm trong tương lai:
+- Smoke tests cho production
 - Failover drills
+- Database backup scripts
+- Monitoring setup scripts

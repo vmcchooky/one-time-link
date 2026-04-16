@@ -29,8 +29,22 @@ func TestValidateCreateSecretRequest(t *testing.T) {
 		}
 
 		err := ValidateCreateSecretRequest(req)
-		if err != ErrInvalidAlgorithm {
-			t.Errorf("expected ErrInvalidAlgorithm, got %v", err)
+		if err == nil {
+			t.Error("expected validation error for invalid algorithm")
+		}
+
+		// Check if it's a MultiValidationError
+		if multiErr, ok := err.(*MultiValidationError); ok {
+			found := false
+			for _, valErr := range multiErr.Errors {
+				if valErr.Field == "algorithm" && valErr.Code == "invalid_algorithm" {
+					found = true
+					break
+				}
+			}
+			if !found {
+				t.Error("expected algorithm validation error")
+			}
 		}
 	})
 
@@ -43,8 +57,22 @@ func TestValidateCreateSecretRequest(t *testing.T) {
 		}
 
 		err := ValidateCreateSecretRequest(req)
-		if err != ErrInvalidTTL {
-			t.Errorf("expected ErrInvalidTTL, got %v", err)
+		if err == nil {
+			t.Error("expected validation error for invalid TTL")
+		}
+
+		// Check if it's a MultiValidationError
+		if multiErr, ok := err.(*MultiValidationError); ok {
+			found := false
+			for _, valErr := range multiErr.Errors {
+				if valErr.Field == "ttlSeconds" && valErr.Code == "invalid_ttl" {
+					found = true
+					break
+				}
+			}
+			if !found {
+				t.Error("expected TTL validation error")
+			}
 		}
 	})
 
@@ -75,8 +103,22 @@ func TestValidateCreateSecretRequest(t *testing.T) {
 		}
 
 		err := ValidateCreateSecretRequest(req)
-		if err != ErrEmptyCiphertext {
-			t.Errorf("expected ErrEmptyCiphertext, got %v", err)
+		if err == nil {
+			t.Error("expected validation error for empty ciphertext")
+		}
+
+		// Check if it's a MultiValidationError
+		if multiErr, ok := err.(*MultiValidationError); ok {
+			found := false
+			for _, valErr := range multiErr.Errors {
+				if valErr.Field == "ciphertext" && valErr.Code == "empty_ciphertext" {
+					found = true
+					break
+				}
+			}
+			if !found {
+				t.Error("expected ciphertext validation error")
+			}
 		}
 	})
 
@@ -89,8 +131,22 @@ func TestValidateCreateSecretRequest(t *testing.T) {
 		}
 
 		err := ValidateCreateSecretRequest(req)
-		if err != ErrCiphertextTooLarge {
-			t.Errorf("expected ErrCiphertextTooLarge, got %v", err)
+		if err == nil {
+			t.Error("expected validation error for ciphertext too large")
+		}
+
+		// Check if it's a MultiValidationError
+		if multiErr, ok := err.(*MultiValidationError); ok {
+			found := false
+			for _, valErr := range multiErr.Errors {
+				if valErr.Field == "ciphertext" && valErr.Code == "ciphertext_too_large" {
+					found = true
+					break
+				}
+			}
+			if !found {
+				t.Error("expected ciphertext size validation error")
+			}
 		}
 	})
 
@@ -103,8 +159,22 @@ func TestValidateCreateSecretRequest(t *testing.T) {
 		}
 
 		err := ValidateCreateSecretRequest(req)
-		if err != ErrEmptyNonce {
-			t.Errorf("expected ErrEmptyNonce, got %v", err)
+		if err == nil {
+			t.Error("expected validation error for empty nonce")
+		}
+
+		// Check if it's a MultiValidationError
+		if multiErr, ok := err.(*MultiValidationError); ok {
+			found := false
+			for _, valErr := range multiErr.Errors {
+				if valErr.Field == "nonce" && valErr.Code == "empty_nonce" {
+					found = true
+					break
+				}
+			}
+			if !found {
+				t.Error("expected nonce validation error")
+			}
 		}
 	})
 
@@ -117,8 +187,22 @@ func TestValidateCreateSecretRequest(t *testing.T) {
 		}
 
 		err := ValidateCreateSecretRequest(req)
-		if err != ErrInvalidNonceLength {
-			t.Errorf("expected ErrInvalidNonceLength, got %v", err)
+		if err == nil {
+			t.Error("expected validation error for invalid nonce length")
+		}
+
+		// Check if it's a MultiValidationError
+		if multiErr, ok := err.(*MultiValidationError); ok {
+			found := false
+			for _, valErr := range multiErr.Errors {
+				if valErr.Field == "nonce" && valErr.Code == "invalid_nonce_length" {
+					found = true
+					break
+				}
+			}
+			if !found {
+				t.Error("expected nonce length validation error")
+			}
 		}
 	})
 
@@ -133,6 +217,29 @@ func TestValidateCreateSecretRequest(t *testing.T) {
 		err := ValidateCreateSecretRequest(req)
 		if err == nil {
 			t.Error("expected error for invalid base64url encoding")
+		}
+	})
+
+	t.Run("returns multiple validation errors", func(t *testing.T) {
+		req := CreateSecretRequest{
+			Ciphertext: "",        // empty
+			Nonce:      "",        // empty
+			Algorithm:  "INVALID", // invalid
+			TTLSeconds: 999,       // invalid
+		}
+
+		err := ValidateCreateSecretRequest(req)
+		if err == nil {
+			t.Fatal("expected validation errors")
+		}
+
+		// Check if it's a MultiValidationError with multiple errors
+		if multiErr, ok := err.(*MultiValidationError); ok {
+			if len(multiErr.Errors) != 4 {
+				t.Errorf("expected 4 validation errors, got %d", len(multiErr.Errors))
+			}
+		} else {
+			t.Error("expected MultiValidationError")
 		}
 	})
 }

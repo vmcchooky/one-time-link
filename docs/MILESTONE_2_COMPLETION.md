@@ -250,8 +250,10 @@ Milestone 2 đã hoàn thành thành công với tất cả acceptance criteria 
 ### Recommendations
 
 **High Priority (Before Production):**
-1. Add Redis connection pool configuration
-2. Add context timeouts for Redis operations
+1. ~~Add Redis connection pool configuration~~ ✅ **IMPLEMENTED**
+2. ~~Add context timeouts for Redis operations~~ ✅ **IMPLEMENTED**
+
+**See:** Production Improvements section below for implementation details.
 
 **Medium Priority (Nice to Have):**
 1. Add retry logic for transient Redis failures
@@ -320,3 +322,86 @@ Milestone 2 đã hoàn thành thành công với tất cả acceptance criteria 
 - **Milestone Tracking:** [product-spec/one-time-link-milestones.md](product-spec/one-time-link-milestones.md)
 - **API Contract:** [contracts/public-http-api.md](contracts/public-http-api.md)
 - **Crypto Specs:** [contracts/crypto-and-api-decisions.md](contracts/crypto-and-api-decisions.md)
+
+
+---
+
+## Production Improvements
+
+**Date:** 2026-04-15  
+**Status:** ✅ COMPLETE
+
+### 1. Redis Connection Pooling ✅
+
+**Implementation:**
+```go
+redis.NewClient(&redis.Options{
+    Addr:         cfg.RedisAddr,
+    Password:     cfg.RedisPassword,
+    DB:           cfg.RedisDB,
+    PoolSize:     cfg.RedisPoolSize,      // Default: 10
+    MinIdleConns: cfg.RedisMinIdle,       // Default: 5
+    MaxRetries:   cfg.RedisMaxRetries,    // Default: 3
+})
+```
+
+**Configuration:**
+```bash
+REDIS_POOL_SIZE=10      # Maximum number of socket connections
+REDIS_MIN_IDLE=5        # Minimum number of idle connections
+REDIS_MAX_RETRIES=3     # Maximum number of retries for failed commands
+```
+
+**Benefits:**
+- Better performance under load
+- Automatic retry for transient failures
+- Configurable for different environments
+- Prevents connection exhaustion
+
+### 2. Context Timeouts for Redis Operations ✅
+
+**Implementation:**
+```go
+const RedisOperationTimeout = 5 * time.Second
+
+func (s *RedisService) CreateSecret(ctx context.Context, req CreateSecretRequest) (*CreateSecretResponse, error) {
+    ctx, cancel := context.WithTimeout(ctx, RedisOperationTimeout)
+    defer cancel()
+    // Redis operations with timeout protection...
+}
+```
+
+**Applied to:**
+- CreateSecret() - Secret creation operations
+- GetSecretStatus() - Status check operations
+- ConsumeSecret() - Secret consumption operations
+- Health() - Health check operations
+
+**Benefits:**
+- Prevents hanging requests
+- Better error handling
+- Predictable timeout behavior
+- Improved reliability
+
+### Configuration Guide
+
+**Development:**
+```bash
+REDIS_POOL_SIZE=10
+REDIS_MIN_IDLE=5
+REDIS_MAX_RETRIES=3
+```
+
+**Production:**
+```bash
+REDIS_POOL_SIZE=20        # Higher for more concurrent requests
+REDIS_MIN_IDLE=10         # Keep more idle connections ready
+REDIS_MAX_RETRIES=3       # Retry transient failures
+```
+
+**Files Modified:**
+- `backend/internal/config/config.go` - Added pool config fields
+- `backend/cmd/api/main.go` - Applied pool settings
+- `backend/internal/secret/redis_service.go` - Added timeouts
+- `backend/internal/store/redis.go` - Added connection timeout
+- `backend/.env.example` - Added pool configuration

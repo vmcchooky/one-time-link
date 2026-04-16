@@ -14,8 +14,10 @@ import (
 
 // mockSecretService implements secret.Service for testing
 type mockSecretService struct {
-	createSecretFunc func(ctx context.Context, req secret.CreateSecretRequest) (*secret.CreateSecretResponse, error)
-	healthFunc       func(ctx context.Context) secret.HealthStatus
+	createSecretFunc    func(ctx context.Context, req secret.CreateSecretRequest) (*secret.CreateSecretResponse, error)
+	healthFunc          func(ctx context.Context) secret.HealthStatus
+	getSecretStatusFunc func(ctx context.Context, secretID string) (*secret.SecretStatus, error)
+	consumeSecretFunc   func(ctx context.Context, secretID string) (*secret.ConsumeSecretResponse, error)
 }
 
 func (m *mockSecretService) CreateSecret(ctx context.Context, req secret.CreateSecretRequest) (*secret.CreateSecretResponse, error) {
@@ -33,6 +35,31 @@ func (m *mockSecretService) Health(ctx context.Context) secret.HealthStatus {
 		return m.healthFunc(ctx)
 	}
 	return secret.HealthStatus{Store: "mock", Mode: "test"}
+}
+
+func (m *mockSecretService) GetSecretStatus(ctx context.Context, secretID string) (*secret.SecretStatus, error) {
+	if m.getSecretStatusFunc != nil {
+		return m.getSecretStatusFunc(ctx, secretID)
+	}
+	return &secret.SecretStatus{
+		SecretID:  secretID,
+		Status:    "pending",
+		CreatedAt: "2026-04-15T12:00:00Z",
+		ExpiresAt: "2026-04-15T13:00:00Z",
+	}, nil
+}
+
+func (m *mockSecretService) ConsumeSecret(ctx context.Context, secretID string) (*secret.ConsumeSecretResponse, error) {
+	if m.consumeSecretFunc != nil {
+		return m.consumeSecretFunc(ctx, secretID)
+	}
+	return &secret.ConsumeSecretResponse{
+		SecretID:   secretID,
+		Ciphertext: "dGVzdC1jaXBoZXJ0ZXh0",
+		Nonce:      "MTIzNDU2Nzg5MDEy",
+		Algorithm:  "AES-GCM",
+		ConsumedAt: "2026-04-15T12:30:00Z",
+	}, nil
 }
 
 func TestCreateSecretEndpoint(t *testing.T) {

@@ -2,6 +2,12 @@
 
 Tài liệu này cung cấp hướng dẫn nhanh để thiết lập môi trường phát triển local cho dự án `one-time-link`.
 
+## Trạng Thái Dự Án
+
+**Milestone hiện tại:** 4/7 hoàn thành (57%)  
+**Trạng thái:** Production-ready, sẵn sàng deploy  
+**Milestone tiếp theo:** Production Deployment
+
 ## Yêu Cầu Hệ Thống
 
 - **Go**: 1.21 trở lên
@@ -92,11 +98,31 @@ go test -cover ./backend/...
 
 # Chạy tests với output chi tiết
 go test -v ./backend/...
+
+# Chạy integration tests
+go test -v ./backend/test
+```
+
+### Load Testing
+
+```bash
+# PowerShell
+.\scripts\load-test.ps1 -Concurrent 10 -Requests 100
+
+# Bash
+./scripts/load-test.sh --concurrent 10 --requests 100
+```
+
+### Rate Limiting Tests
+
+```powershell
+# PowerShell
+.\scripts\test-rate-limiting.ps1
 ```
 
 ### Frontend Verification
 
-Frontend test runner has not been added yet in Milestone 1.
+Frontend test runner has not been added yet.
 
 Use build verification instead:
 
@@ -169,4 +195,21 @@ one-time-link/
 
 ## Đóng Góp
 
-Hiện tại dự án đang ở giai đoạn Milestone 1. Vui lòng tham khảo [docs/product-spec/one-time-link-milestones.md](docs/product-spec/one-time-link-milestones.md) để biết thêm chi tiết về các milestone và nhiệm vụ hiện tại.
+Hiện tại dự án đã hoàn thành Milestone 4 và sẵn sàng cho production deployment. Vui lòng tham khảo:
+- [docs/product-spec/one-time-link-milestones.md](docs/product-spec/one-time-link-milestones.md) - Lộ trình phát triển
+- [docs/MILESTONE_4_COMPLETION.md](docs/MILESTONE_4_COMPLETION.md) - Milestone 4 completion report
+- [docs/PRODUCTION_CHECKLIST.md](docs/PRODUCTION_CHECKLIST.md) - Production deployment checklist
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+Copyright (c) 2026 Quorix Việt Nam
+
+## Contact
+
+**Developed by:** Quorix Việt Nam
+
+- **Website:** [quorix.io.vn](https://quorix.io.vn)
+- **Email:** contact@quorix.io.vn
+- **Facebook:** [facebook.com/quorixvietnam](https://facebook.com/quorixvietnam)

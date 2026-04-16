@@ -264,3 +264,124 @@ button.secondary:hover:not(:disabled) {
 .secret-link-box button {
   flex-shrink: 0;
 }
+
+/* Reveal Page Styles */
+.reveal-state,
+.reveal-gate,
+.reveal-success,
+.reveal-error {
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.reveal-gate {
+  padding: 32px;
+}
+
+.reveal-info {
+  margin-bottom: 32px;
+}
+
+.reveal-message {
+  font-size: 18px;
+  margin-bottom: 12px;
+  color: var(--text);
+}
+
+.reveal-warning {
+  color: var(--warn);
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.reveal-expiry {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 16px;
+}
+
+.btn-primary {
+  padding: 16px 32px;
+  font-size: 16px;
+  background: var(--brand);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary:hover {
+  background: var(--brand-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(184, 72, 43, 0.3);
+}
+
+.btn-large {
+  padding: 18px 40px;
+  font-size: 18px;
+}
+
+.btn-secondary {
+  padding: 12px 24px;
+  background: var(--muted);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-secondary:hover {
+  background: var(--text);
+}
+
+.reveal-success {
+  padding: 24px;
+}
+
+.reveal-label {
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--text);
+}
+
+.secret-content {
+  margin: 20px 0;
+  padding: 20px;
+  background: var(--surface-strong);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  text-align: left;
+}
+
+.secret-content pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.reveal-notice {
+  margin-top: 20px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.reveal-error {
+  padding: 32px;
+}
+
+.error-message {
+  font-size: 16px;
+  margin: 20px 0;
+  color: var(--text);
+}

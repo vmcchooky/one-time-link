@@ -16,16 +16,9 @@ type healthResponse struct {
 	Version   string `json:"version"`
 }
 
-type errorResponse struct {
-	Error     string `json:"error"`
-	Message   string `json:"message"`
-	Timestamp string `json:"timestamp"`
-	RequestID string `json:"request_id,omitempty"`
-}
-
 func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		writeErrorJSON(w, r, http.StatusMethodNotAllowed, "method_not_allowed", "Method not allowed")
+		RespondError(w, r, ErrMethodNotAllowed("Method not allowed"))
 		return
 	}
 
@@ -39,7 +32,7 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleCreateSecret(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		writeErrorJSON(w, r, http.StatusMethodNotAllowed, "method_not_allowed", "Method not allowed")
+		RespondError(w, r, ErrMethodNotAllowed("Method not allowed"))
 		return
 	}
 
@@ -47,7 +40,8 @@ func (s *Server) handleCreateSecret(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		// MaxBytesReader will return error if limit exceeded
-		writeErrorJSON(w, r, http.StatusRequestEntityTooLarge, "payload_too_large", "Request body exceeds 15KB limit")
+		RespondError(w, r, ErrPayloadTooLarge("Request body exceeds 15KB limit").
+			WithDetail("max_size_bytes", 15*1024))
 		return
 	}
 
@@ -55,20 +49,35 @@ func (s *Server) handleCreateSecret(w http.ResponseWriter, r *http.Request) {
 	var req secret.CreateSecretRequest
 	err = json.Unmarshal(body, &req)
 	if err != nil {
-		writeErrorJSON(w, r, http.StatusBadRequest, "invalid_request", "Invalid JSON request body")
+		RespondError(w, r, ErrInvalidRequest("Invalid JSON request body").
+			WithError(err))
 		return
 	}
 
 	// Validate request
 	if err := secret.ValidateCreateSecretRequest(req); err != nil {
-		writeErrorJSON(w, r, http.StatusBadRequest, "invalid_request", err.Error())
+		// Check if it's a multi-validation error
+		if multiErr, ok := err.(*secret.MultiValidationError); ok {
+			appErr := ErrValidationFailed("Request validation failed")
+
+			// Add each validation error to details
+			for _, valErr := range multiErr.Errors {
+				AddValidationError(appErr, valErr.Field, valErr.Message, valErr.Code)
+			}
+
+			RespondError(w, r, appErr)
+			return
+		}
+
+		// Fallback for other validation errors
+		RespondError(w, r, ErrInvalidRequest(err.Error()).WithError(err))
 		return
 	}
 
 	// Create secret using service
 	resp, err := s.secretService.CreateSecret(r.Context(), req)
 	if err != nil {
-		writeErrorJSON(w, r, http.StatusInternalServerError, "internal_error", "Failed to create secret")
+		RespondError(w, r, ErrInternal("Failed to create secret").WithError(err))
 		return
 	}
 
@@ -77,11 +86,11 @@ func (s *Server) handleCreateSecret(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleCreateRevealSession(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		writeErrorJSON(w, r, http.StatusMethodNotAllowed, "method_not_allowed", "Method not allowed")
+		RespondError(w, r, ErrMethodNotAllowed("Method not allowed"))
 		return
 	}
 
-	writeErrorJSON(w, r, http.StatusNotImplemented, "not_implemented", "Reveal session endpoint is scaffolded but not implemented yet")
+	RespondError(w, r, ErrNotImplemented("Reveal session endpoint is scaffolded but not implemented yet"))
 }
 
 func (s *Server) handleSecretRoutes(w http.ResponseWriter, r *http.Request) {
@@ -89,26 +98,66 @@ func (s *Server) handleSecretRoutes(w http.ResponseWriter, r *http.Request) {
 
 	switch {
 	case strings.HasSuffix(path, "/status") && r.Method == http.MethodGet:
-		writeErrorJSON(w, r, http.StatusNotImplemented, "not_implemented", "Secret status endpoint is scaffolded but not implemented yet")
+		s.handleGetSecretStatus(w, r, path)
 	case strings.HasSuffix(path, "/consume") && r.Method == http.MethodPost:
-		writeErrorJSON(w, r, http.StatusNotImplemented, "not_implemented", "Secret consume endpoint is scaffolded but not implemented yet")
+		s.handleConsumeSecret(w, r, path)
 	default:
-		writeErrorJSON(w, r, http.StatusNotFound, "not_found", "Route not found")
+		RespondError(w, r, ErrNotFound("Route not found"))
 	}
+}
+
+func (s *Server) handleGetSecretStatus(w http.ResponseWriter, r *http.Request, path string) {
+	// Extract secret ID from path (remove "/status" suffix)
+	secretID := strings.TrimSuffix(path, "/status")
+	if secretID == "" {
+		RespondError(w, r, ErrInvalidSecretID("Secret ID is required"))
+		return
+	}
+
+	// Get secret status from service
+	status, err := s.secretService.GetSecretStatus(r.Context(), secretID)
+	if err != nil {
+		RespondError(w, r, ErrInternal("Failed to get secret status").WithError(err))
+		return
+	}
+
+	// If secret not found, return 404
+	if status.Status == "not_found" {
+		w.WriteHeader(http.StatusNotFound)
+		_ = json.NewEncoder(w).Encode(status)
+		return
+	}
+
+	// Return status
+	writeJSON(w, http.StatusOK, status)
+}
+
+func (s *Server) handleConsumeSecret(w http.ResponseWriter, r *http.Request, path string) {
+	// Extract secret ID from path (remove "/consume" suffix)
+	secretID := strings.TrimSuffix(path, "/consume")
+	if secretID == "" {
+		RespondError(w, r, ErrInvalidSecretID("Secret ID is required"))
+		return
+	}
+
+	// Consume secret from service
+	response, err := s.secretService.ConsumeSecret(r.Context(), secretID)
+	if err != nil {
+		// Check if secret not found or already consumed
+		if strings.Contains(err.Error(), "not found or already consumed") {
+			RespondError(w, r, ErrAlreadyConsumed("This secret has already been revealed or has expired.").
+				WithDetail("secret_id", secretID))
+			return
+		}
+		RespondError(w, r, ErrInternal("Failed to consume secret").WithError(err))
+		return
+	}
+
+	// Return consumed secret data
+	writeJSON(w, http.StatusOK, response)
 }
 
 func writeJSON(w http.ResponseWriter, statusCode int, payload any) {
 	w.WriteHeader(statusCode)
 	_ = json.NewEncoder(w).Encode(payload)
-}
-
-func writeErrorJSON(w http.ResponseWriter, r *http.Request, statusCode int, errorCode, message string) {
-	requestID := getRequestID(r.Context())
-	w.WriteHeader(statusCode)
-	_ = json.NewEncoder(w).Encode(errorResponse{
-		Error:     errorCode,
-		Message:   message,
-		Timestamp: time.Now().UTC().Format(time.RFC3339),
-		RequestID: requestID,
-	})
 }

@@ -10,14 +10,17 @@ import (
 	"time"
 
 	"one-time-link/backend/internal/config"
+	"one-time-link/backend/internal/ratelimit"
 	"one-time-link/backend/internal/secret"
 
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 )
 
 type Server struct {
 	config        config.Config
 	secretService secret.Service
+	rateLimiter   *ratelimit.Limiter
 }
 
 type contextKey string
@@ -28,6 +31,15 @@ func NewServer(cfg config.Config, secretService secret.Service) *Server {
 	return &Server{
 		config:        cfg,
 		secretService: secretService,
+		rateLimiter:   nil, // Will be set if Redis client provided
+	}
+}
+
+func NewServerWithRateLimiting(cfg config.Config, secretService secret.Service, redisClient *redis.Client) *Server {
+	return &Server{
+		config:        cfg,
+		secretService: secretService,
+		rateLimiter:   ratelimit.NewLimiter(redisClient),
 	}
 }
 
@@ -39,10 +51,14 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/api/reveal-sessions", s.handleCreateRevealSession)
 
 	return withRequestID(
-		withCORS(s.config.AllowedOrigin,
-			withJSONHeaders(
-				withRequestSizeLimit(15*1024, // 15KB limit
-					withRequestLogging(mux)))))
+		withSecurityHeaders(
+			withCORS(s.config.AllowedOrigin,
+				withJSONHeaders(
+					withCaching(
+						s.withMetrics(
+							s.withRateLimiting(
+								withRequestSizeLimit(15*1024, // 15KB limit
+									withRequestLogging(mux)))))))))
 }
 
 func withRequestID(next http.Handler) http.Handler {
@@ -81,6 +97,35 @@ func withCORS(allowedOrigin string, next http.Handler) http.Handler {
 func withJSONHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		next.ServeHTTP(w, r)
+	})
+}
+
+func withSecurityHeaders(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Prevent MIME type sniffing
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+
+		// Prevent clickjacking
+		w.Header().Set("X-Frame-Options", "DENY")
+
+		// Enable XSS protection
+		w.Header().Set("X-XSS-Protection", "1; mode=block")
+
+		// Enforce HTTPS (only set if request is HTTPS)
+		if r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https" {
+			w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+		}
+
+		// Referrer policy
+		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+
+		// Content Security Policy
+		w.Header().Set("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'")
+
+		// Permissions Policy (formerly Feature Policy)
+		w.Header().Set("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
+
 		next.ServeHTTP(w, r)
 	})
 }

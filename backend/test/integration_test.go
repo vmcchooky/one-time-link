@@ -269,3 +269,270 @@ func testCreateSecret(t *testing.T, req CreateSecretRequest, expectedStatus int)
 		t.Logf("Created secret: %s, expires: %s", result.SecretID, result.ExpiresAt)
 	}
 }
+
+type SecretStatus struct {
+	SecretID  string `json:"secretId"`
+	Status    string `json:"status"`
+	CreatedAt string `json:"createdAt,omitempty"`
+	ExpiresAt string `json:"expiresAt,omitempty"`
+	Message   string `json:"message,omitempty"`
+}
+
+type ConsumeSecretResponse struct {
+	SecretID   string `json:"secretId"`
+	Ciphertext string `json:"ciphertext"`
+	Nonce      string `json:"nonce"`
+	Algorithm  string `json:"algorithm"`
+	ConsumedAt string `json:"consumedAt"`
+}
+
+func TestMilestone3RevealFlow(t *testing.T) {
+	// Check if backend is running
+	resp, err := http.Get(apiBaseURL + "/healthz")
+	if err != nil {
+		t.Skip("Backend not running, skipping integration tests")
+		return
+	}
+	resp.Body.Close()
+
+	t.Run("Complete Reveal Flow", func(t *testing.T) {
+		// Step 1: Create a secret
+		createReq := CreateSecretRequest{
+			Ciphertext: "dGVzdC1yZXZlYWwtZmxvdw",
+			Nonce:      "MTIzNDU2Nzg5MDEy",
+			Algorithm:  "AES-GCM",
+			TTLSeconds: 3600,
+		}
+
+		secretID := createSecretForTest(t, createReq)
+		if secretID == "" {
+			t.Fatal("failed to create secret")
+		}
+
+		// Step 2: Check status (should be pending)
+		status := getSecretStatus(t, secretID)
+		if status.Status != "pending" {
+			t.Errorf("expected status 'pending', got '%s'", status.Status)
+		}
+		if status.SecretID != secretID {
+			t.Errorf("expected secretId '%s', got '%s'", secretID, status.SecretID)
+		}
+
+		// Step 3: Consume the secret (first time should succeed)
+		consumeResp := consumeSecret(t, secretID, 200)
+		if consumeResp.SecretID != secretID {
+			t.Errorf("expected secretId '%s', got '%s'", secretID, consumeResp.SecretID)
+		}
+		if consumeResp.Ciphertext != createReq.Ciphertext {
+			t.Errorf("ciphertext mismatch")
+		}
+		if consumeResp.Nonce != createReq.Nonce {
+			t.Errorf("nonce mismatch")
+		}
+		if consumeResp.Algorithm != createReq.Algorithm {
+			t.Errorf("algorithm mismatch")
+		}
+
+		// Step 4: Try to consume again (should fail with 410)
+		consumeSecret(t, secretID, 410)
+
+		// Step 5: Check status again (should be not_found)
+		status = getSecretStatus(t, secretID)
+		if status.Status != "not_found" {
+			t.Errorf("expected status 'not_found', got '%s'", status.Status)
+		}
+	})
+
+	t.Run("Status Check for Non-Existent Secret", func(t *testing.T) {
+		status := getSecretStatus(t, "non-existent-secret-id")
+		if status.Status != "not_found" {
+			t.Errorf("expected status 'not_found', got '%s'", status.Status)
+		}
+	})
+
+	t.Run("Consume Non-Existent Secret", func(t *testing.T) {
+		consumeSecret(t, "non-existent-secret-id", 410)
+	})
+
+	t.Run("Concurrent Consume Attempts", func(t *testing.T) {
+		// Create a secret
+		createReq := CreateSecretRequest{
+			Ciphertext: "dGVzdC1jb25jdXJyZW50",
+			Nonce:      "MTIzNDU2Nzg5MDEy",
+			Algorithm:  "AES-GCM",
+			TTLSeconds: 3600,
+		}
+
+		secretID := createSecretForTest(t, createReq)
+		if secretID == "" {
+			t.Fatal("failed to create secret")
+		}
+
+		// Try to consume concurrently
+		results := make(chan int, 3)
+		for i := 0; i < 3; i++ {
+			go func() {
+				resp := consumeSecretRaw(t, secretID)
+				results <- resp.StatusCode
+				resp.Body.Close()
+			}()
+		}
+
+		// Collect results
+		statusCodes := make([]int, 3)
+		for i := 0; i < 3; i++ {
+			statusCodes[i] = <-results
+		}
+
+		// Exactly one should succeed (200), others should fail (410)
+		successCount := 0
+		failCount := 0
+		for _, code := range statusCodes {
+			if code == 200 {
+				successCount++
+			} else if code == 410 {
+				failCount++
+			}
+		}
+
+		if successCount != 1 {
+			t.Errorf("expected exactly 1 success, got %d", successCount)
+		}
+		if failCount != 2 {
+			t.Errorf("expected exactly 2 failures, got %d", failCount)
+		}
+	})
+
+	t.Run("Multiple Secrets Independent", func(t *testing.T) {
+		// Create two secrets
+		secret1ID := createSecretForTest(t, CreateSecretRequest{
+			Ciphertext: "dGVzdC1zZWNyZXQtMQ",
+			Nonce:      "MTIzNDU2Nzg5MDEy",
+			Algorithm:  "AES-GCM",
+			TTLSeconds: 3600,
+		})
+
+		secret2ID := createSecretForTest(t, CreateSecretRequest{
+			Ciphertext: "dGVzdC1zZWNyZXQtMg",
+			Nonce:      "MTIzNDU2Nzg5MDEy",
+			Algorithm:  "AES-GCM",
+			TTLSeconds: 3600,
+		})
+
+		// Consume first secret
+		consumeSecret(t, secret1ID, 200)
+
+		// Second secret should still be available
+		status := getSecretStatus(t, secret2ID)
+		if status.Status != "pending" {
+			t.Errorf("secret2 should still be pending, got '%s'", status.Status)
+		}
+
+		// Consume second secret
+		consumeSecret(t, secret2ID, 200)
+
+		// Both should now be consumed
+		status1 := getSecretStatus(t, secret1ID)
+		status2 := getSecretStatus(t, secret2ID)
+
+		if status1.Status != "not_found" {
+			t.Errorf("secret1 should be not_found, got '%s'", status1.Status)
+		}
+		if status2.Status != "not_found" {
+			t.Errorf("secret2 should be not_found, got '%s'", status2.Status)
+		}
+	})
+}
+
+func createSecretForTest(t *testing.T, req CreateSecretRequest) string {
+	t.Helper()
+
+	body, err := json.Marshal(req)
+	if err != nil {
+		t.Fatalf("failed to marshal request: %v", err)
+	}
+
+	httpReq, err := http.NewRequest("POST", apiBaseURL+"/api/secrets", bytes.NewReader(body))
+	if err != nil {
+		t.Fatalf("failed to create request: %v", err)
+	}
+
+	httpReq.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(httpReq)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 201 {
+		t.Fatalf("expected status 201, got %d", resp.StatusCode)
+	}
+
+	var result CreateSecretResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("failed to decode response: %v", err)
+	}
+
+	return result.SecretID
+}
+
+func getSecretStatus(t *testing.T, secretID string) SecretStatus {
+	t.Helper()
+
+	url := fmt.Sprintf("%s/api/secrets/%s/status", apiBaseURL, secretID)
+	resp, err := http.Get(url)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
+	defer resp.Body.Close()
+
+	var status SecretStatus
+	if err := json.NewDecoder(resp.Body).Decode(&status); err != nil {
+		t.Fatalf("failed to decode response: %v", err)
+	}
+
+	return status
+}
+
+func consumeSecret(t *testing.T, secretID string, expectedStatus int) ConsumeSecretResponse {
+	t.Helper()
+
+	resp := consumeSecretRaw(t, secretID)
+	defer resp.Body.Close()
+
+	if resp.StatusCode != expectedStatus {
+		t.Errorf("expected status %d, got %d", expectedStatus, resp.StatusCode)
+	}
+
+	if resp.StatusCode == 200 {
+		var result ConsumeSecretResponse
+		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+			t.Fatalf("failed to decode response: %v", err)
+		}
+		return result
+	}
+
+	return ConsumeSecretResponse{}
+}
+
+func consumeSecretRaw(t *testing.T, secretID string) *http.Response {
+	t.Helper()
+
+	url := fmt.Sprintf("%s/api/secrets/%s/consume", apiBaseURL, secretID)
+	httpReq, err := http.NewRequest("POST", url, bytes.NewReader([]byte("{}")))
+	if err != nil {
+		t.Fatalf("failed to create request: %v", err)
+	}
+
+	httpReq.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(httpReq)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
+
+	return resp
+}

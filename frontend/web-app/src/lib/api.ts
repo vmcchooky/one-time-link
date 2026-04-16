@@ -1,7 +1,9 @@
 import type { 
   HealthResponse, 
   CreateSecretRequest, 
-  CreateSecretResponse 
+  CreateSecretResponse,
+  SecretStatus,
+  ConsumeSecretResponse
 } from "./types";
 
 const defaultApiBaseUrl = "http://localhost:8080";
@@ -54,4 +56,61 @@ export async function createSecret(
   }
 
   return (await response.json()) as CreateSecretResponse;
+}
+
+export async function getSecretStatus(
+  secretId: string
+): Promise<SecretStatus> {
+  const requestId = generateRequestId();
+  
+  const response = await fetch(`${apiBaseUrl}/api/secrets/${secretId}/status`, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+      "X-Request-ID": requestId,
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(
+      errorData.message || `Failed to get secret status: ${response.status}`
+    );
+  }
+
+  return (await response.json()) as SecretStatus;
+}
+
+export async function consumeSecret(
+  secretId: string
+): Promise<ConsumeSecretResponse> {
+  const requestId = generateRequestId();
+  
+  const response = await fetch(`${apiBaseUrl}/api/secrets/${secretId}/consume`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      "X-Request-ID": requestId,
+    },
+    body: JSON.stringify({}),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    
+    // Handle specific error cases
+    if (response.status === 410) {
+      throw new Error("already_consumed");
+    }
+    if (response.status === 404) {
+      throw new Error("not_found");
+    }
+    
+    throw new Error(
+      errorData.message || `Failed to consume secret: ${response.status}`
+    );
+  }
+
+  return (await response.json()) as ConsumeSecretResponse;
 }

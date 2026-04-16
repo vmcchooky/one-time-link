@@ -34,6 +34,7 @@ type SecretStatus struct {
 	Status    string `json:"status"`
 	CreatedAt string `json:"createdAt,omitempty"`
 	ExpiresAt string `json:"expiresAt,omitempty"`
+	Message   string `json:"message,omitempty"`
 }
 
 // ConsumeSecretResponse represents the response when consuming a secret
@@ -43,4 +44,10 @@ type ConsumeSecretResponse struct {
 	Nonce      string `json:"nonce"`
 	Algorithm  string `json:"algorithm"`
 	ConsumedAt string `json:"consumedAt"`
+}
+
+// HealthStatus represents the health status of a dependency
+type HealthStatus struct {
+	Store string `json:"store"`
+	Mode  string `json:"mode"`
 }

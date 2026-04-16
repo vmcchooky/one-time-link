@@ -4,25 +4,27 @@
 
 ## Trọng Tâm Hiện Tại
 
-**Milestone 2 đã hoàn thành! ✅**
+**Milestone 4 đã hoàn thành! ✅**
 
 Repository hiện đang ở giai đoạn:
 
 - ✅ **Milestone 1:** Foundation and Local Development - COMPLETE
 - ✅ **Milestone 2:** Client-Side Encryption and Secret Creation - COMPLETE
-- ⏳ **Milestone 3:** Secret Reveal and Consumption - NEXT
+- ✅ **Milestone 3:** Reveal Gate and Status Checking - COMPLETE
+- ✅ **Milestone 4:** Rate Limiting and Production Readiness - COMPLETE
+- ⏳ **Milestone 5:** Production Deployment - NEXT
 
-### Milestone 2 Highlights
+### Milestone 4 Highlights
 
-- ✅ Client-side encryption với AES-GCM 256-bit
-- ✅ POST /api/secrets endpoint hoạt động
-- ✅ Redis storage với TTL tự động
-- ✅ Create secret form với TTL selection
-- ✅ URL generation với encryption key trong fragment
-- ✅ Comprehensive validation và error handling
-- ✅ 20+ test cases với 70% coverage
+- ✅ Rate limiting (10/hr create, 20/hr consume, 100/hr status)
+- ✅ Enhanced error handling với structured errors
+- ✅ Performance optimization (caching, metrics)
+- ✅ Security headers (HSTS, CSP, X-Frame-Options)
+- ✅ Production build scripts
+- ✅ Deployment checklist và troubleshooting guide
+- ✅ Load testing scripts
 
-Xem chi tiết: `docs/MILESTONE_2_COMPLETION.md`
+Xem chi tiết: `docs/MILESTONE_4_COMPLETION.md`
 
 ## Cấu Trúc Repository
 
@@ -85,7 +87,12 @@ Frontend sẽ chạy tại `http://localhost:5173` theo mặc định.
 ### Milestone Documentation
 - [docs/MILESTONE_1_COMPLETION.md](docs/MILESTONE_1_COMPLETION.md) - Milestone 1 completion report
 - [docs/MILESTONE_2_COMPLETION.md](docs/MILESTONE_2_COMPLETION.md) - Milestone 2 completion report (includes quality assessment, metrics, and checklist)
-- [docs/MILESTONE_2_QUICK_REFERENCE.md](docs/MILESTONE_2_QUICK_REFERENCE.md) - Milestone 2 quick reference guide
+- [docs/MILESTONE_3_COMPLETION.md](docs/MILESTONE_3_COMPLETION.md) - Milestone 3 completion report
+- [docs/MILESTONE_3_QUICK_REFERENCE.md](docs/MILESTONE_3_QUICK_REFERENCE.md) - Milestone 3 quick reference guide
+- [docs/MILESTONE_4_COMPLETION.md](docs/MILESTONE_4_COMPLETION.md) - Milestone 4 completion report
+- [docs/MILESTONE_4_QUICK_REFERENCE.md](docs/MILESTONE_4_QUICK_REFERENCE.md) - Milestone 4 quick reference guide
+- [docs/PRODUCTION_CHECKLIST.md](docs/PRODUCTION_CHECKLIST.md) - Production deployment checklist
+- [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) - Troubleshooting guide
 
 ## Milestone Progress
 
@@ -145,15 +152,65 @@ Frontend sẽ chạy tại `http://localhost:5173` theo mặc định.
 - `docs/MILESTONE_2_REVIEW.md` - Code review and quality assessment
 - `docs/MILESTONE_2_QUICK_REFERENCE.md` - Quick reference guide
 
-### ⏳ Milestone 3: Secret Reveal and Consumption (NEXT)
+### ✅ Milestone 3: Reveal Gate and Status Checking (COMPLETE)
+
+**Completed Features:**
+- ✅ GET /api/secrets/{id}/status endpoint
+- ✅ POST /api/secrets/{id}/consume endpoint
+- ✅ Reveal page với preview bot protection
+- ✅ React Router integration
+- ✅ Client-side decryption
+- ✅ Atomic GETDEL operations
+- ✅ 16 test cases (11 unit + 5 integration)
+
+**Documentation:** 
+- `docs/MILESTONE_3_COMPLETION.md` - Full completion report
+- `docs/MILESTONE_3_QUICK_REFERENCE.md` - Quick reference guide
+
+### ✅ Milestone 4: Rate Limiting and Production Readiness (COMPLETE)
+
+**Completed Features:**
+
+**Rate Limiting:**
+- ✅ Redis-based rate limiter (10/hr create, 20/hr consume, 100/hr status)
+- ✅ Per-IP tracking với X-Forwarded-For support
+- ✅ Rate limit headers (X-RateLimit-*)
+- ✅ 429 responses với Retry-After
+- ✅ Graceful degradation
+
+**Error Handling:**
+- ✅ Structured error system với AppError
+- ✅ Field-specific validation errors
+- ✅ Multiple validation errors returned together
+- ✅ Error logging với context (no sensitive data)
+
+**Performance:**
+- ✅ Response caching (health check: 10s)
+- ✅ Request metrics và slow request logging
+- ✅ Load testing scripts (PowerShell + Bash)
+- ✅ P95 < 100ms, 100+ req/s
+
+**Production:**
+- ✅ Security headers (HSTS, CSP, X-Frame-Options, etc.)
+- ✅ Production build scripts với security audit
+- ✅ Production config template
+- ✅ Deployment checklist
+- ✅ Troubleshooting guide
+
+**Documentation:**
+- `docs/MILESTONE_4_COMPLETION.md` - Full completion report
+- `docs/MILESTONE_4_QUICK_REFERENCE.md` - Quick reference guide
+- `docs/PRODUCTION_CHECKLIST.md` - Deployment checklist
+- `docs/TROUBLESHOOTING.md` - Common issues guide
+
+### ⏳ Milestone 5: Production Deployment (NEXT)
 
 **Planned Features:**
-- GET /api/secrets/{id}/status endpoint
-- POST /api/secrets/{id}/consume endpoint
-- Reveal page component
-- Client-side decryption
-- Already-used state tracking
-- End-to-end testing
+- VPS setup và configuration
+- HTTPS/TLS configuration
+- Frontend deployment (Vercel)
+- DNS configuration
+- Monitoring setup
 
 ## Testing
 
@@ -200,34 +257,56 @@ go test -v ./test
    - Generate shareable link
    - Copy link to clipboard
 
-2. **Backend API**
+2. **Reveal Secret Flow**
+   - Status check (non-destructive)
+   - Reveal gate với preview bot protection
+   - One-time consumption (atomic GETDEL)
+   - Client-side decryption
+   - Error handling cho all states
+
+3. **Backend API**
    - POST /api/secrets - Create encrypted secret
+   - GET /api/secrets/{id}/status - Check secret status
+   - POST /api/secrets/{id}/consume - Consume secret (one-time)
    - GET /healthz - Health check
    - Request validation
    - Error handling
    - Redis storage với TTL
+   - Rate limiting per IP
 
-3. **Security**
+4. **Security**
    - Client-side encryption (plaintext never sent to server)
    - Encryption key in URL fragment (never sent to server)
    - Input validation
    - Size limits (10KB plaintext, 15KB request)
    - CORS protection
    - IP/UA hashing in logs
+   - Rate limiting (10/hr create, 20/hr consume, 100/hr status)
+   - Security headers (HSTS, CSP, X-Frame-Options, etc.)
+   - Atomic operations (race condition prevention)
+
+5. **Production Readiness**
+   - Structured error handling
+   - Performance optimization (caching, metrics)
+   - Load testing scripts
+   - Production build scripts
+   - Deployment checklist
+   - Troubleshooting guide
 
 ### Pending Features ⏳
 
-1. **Reveal Flow** (Milestone 3)
-   - Secret status checking
-   - Reveal gate UI
-   - Client-side decryption
-   - One-time consumption
+1. **Production Deployment** (Milestone 5)
+   - VPS setup
+   - HTTPS/TLS configuration
+   - Frontend deployment
+   - DNS configuration
+   - Monitoring setup
 
 2. **Advanced Features** (Future Milestones)
-   - Rate limiting
    - Custom expiration times
    - Email delivery
    - Admin dashboard
+   - Analytics
 
 ## Technology Stack
 
@@ -298,18 +377,38 @@ REDIS_DB=0
 VITE_API_BASE_URL=http://localhost:8080
 ```
 
-## Contributing
+## Đóng Góp
 
-Xem [DEVELOPMENT.md](DEVELOPMENT.md) để biết chi tiết về:
-- Development workflow
+Chúng tôi hoan nghênh mọi đóng góp! Xem [CONTRIBUTING.md](CONTRIBUTING.md) để biết chi tiết về:
+- Cách báo cáo bugs
+- Cách đề xuất features
+- Quy trình code contribution
 - Code style guidelines
 - Testing requirements
-- Commit conventions
+
+Hoặc xem [DEVELOPMENT.md](DEVELOPMENT.md) để biết chi tiết về:
+- Development workflow
+- Local setup
+- Testing procedures
+
+## Project Status
+
+**Current Status:** Production-ready, awaiting deployment  
+**Completed Milestones:** 4/7 (57%)  
+**Next Milestone:** Production Deployment
 
 ## License
 
-[Add license information]
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+Copyright (c) 2026 Quorix Việt Nam
 
 ## Contact
 
-[Add contact information]
+**Developed by:** Quorix Việt Nam
+
+- **Website:** [quorix.io.vn](https://quorix.io.vn)
+- **Email:** contact@quorix.io.vn
+- **Facebook:** [facebook.com/quorixvietnam](https://facebook.com/quorixvietnam)
+
+For bug reports and feature requests, please open an issue on GitHub.

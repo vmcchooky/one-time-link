@@ -9,11 +9,8 @@ import (
 type Service interface {
 	Health(ctx context.Context) HealthStatus
 	CreateSecret(ctx context.Context, req CreateSecretRequest) (*CreateSecretResponse, error)
-}
-
-type HealthStatus struct {
-	Store string `json:"store"`
-	Mode  string `json:"mode"`
+	GetSecretStatus(ctx context.Context, secretID string) (*SecretStatus, error)
+	ConsumeSecret(ctx context.Context, secretID string) (*ConsumeSecretResponse, error)
 }
 
 type InMemoryService struct {
@@ -40,4 +37,16 @@ func (s *InMemoryService) CreateSecret(ctx context.Context, req CreateSecretRequ
 	_ = ctx
 	_ = req
 	return nil, fmt.Errorf("in-memory service does not support CreateSecret")
+}
+
+func (s *InMemoryService) GetSecretStatus(ctx context.Context, secretID string) (*SecretStatus, error) {
+	_ = ctx
+	_ = secretID
+	return nil, fmt.Errorf("in-memory service does not support GetSecretStatus")
+}
+
+func (s *InMemoryService) ConsumeSecret(ctx context.Context, secretID string) (*ConsumeSecretResponse, error) {
+	_ = ctx
+	_ = secretID
+	return nil, fmt.Errorf("in-memory service does not support ConsumeSecret")
 }

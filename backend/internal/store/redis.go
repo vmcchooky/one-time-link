@@ -3,8 +3,14 @@ package store
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/redis/go-redis/v9"
+)
+
+const (
+	// RedisConnectionTimeout is the timeout for initial connection
+	RedisConnectionTimeout = 5 * time.Second
 )
 
 type RedisStore struct {
@@ -18,7 +24,10 @@ func NewRedisStore(addr, password string, db int) (*RedisStore, error) {
 		DB:       db,
 	})
 
-	ctx := context.Background()
+	// Use timeout for connection check
+	ctx, cancel := context.WithTimeout(context.Background(), RedisConnectionTimeout)
+	defer cancel()
+
 	if err := client.Ping(ctx).Err(); err != nil {
 		return nil, fmt.Errorf("failed to connect to Redis: %w", err)
 	}
