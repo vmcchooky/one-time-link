@@ -16,3 +16,9 @@ They are not the product specification for the `one-time-link` application.
 
 - The repository needs product-facing documentation for a one-time secret sharing application.
 - The archived files are still useful as examples of document structure, but they should not guide current implementation decisions.
+
+---
+
+**Archived Date:** 2026-04-14  
+**Reason:** Replaced by actual one-time-link product specification  
+**Current Docs:** See `docs/product-spec/` for active documentation
